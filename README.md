@@ -30,23 +30,28 @@ To run the script, follow these steps:
     ```bash
     chmod +x compressor.sh
     ```
-4. Run the script and specify the directories to compress:
+4. Run the script and specify the directories to compress, and optionally set the quality using the `-q` parameter:
     ```bash
-    ./compressor.sh <directory1> [<directory2> ... <directoryN>]
+    ./compressor.sh [-q quality] <directory1> [<directory2> ... <directoryN>]
     ```
 
+   - `-q quality`: Optional parameter to specify the compression quality. The default value is 65 if not provided.
+   
 Example:
 ```bash
-./compressor.sh folder1 folder2 folder3
+./compressor.sh -q 75 folder1 folder2 folder3
 ```
-
-## Sample Output
 <img width="694" alt="image" src="https://github.com/user-attachments/assets/4d05813b-c093-4d1b-9da4-d6167c191a54">
 
-## Known Issues
-- There may be some incompatibilities due to ImageMagick's change from convert to magick. Ensure that the magick command is correctly configured on your system.
+If you do not specify the -q parameter, the default quality "-q 65" is used.
+
+## Script Details
+- **-q quality:** Set the compression quality. The default value is 65. If not provided, the script uses 65 as the default quality setting.
+- **File Size Calculation:** Sizes are displayed in bytes, kilobytes, megabytes, or gigabytes.
+- **Savings Calculation:** The script calculates and displays the percentage of savings based on the file size before and after compression.
 
 ## Contributing
-Sefa Öğük - Developer and maintainer of the script
+**Sefa Öğük** - Developer and maintainer of the script
+
 
 
