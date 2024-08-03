@@ -28,18 +28,18 @@ To run the script, follow these steps:
 2. Navigate to the directory where the script is located in your terminal or command line.
 3. Make the script executable:
     ```bash
-    chmod +x compressor.sh
+    chmod +x imagecompressor.sh
     ```
 4. Run the script and specify the directories to compress, and optionally set the quality using the `-q` parameter:
     ```bash
-    ./compressor.sh [-q quality] <directory1> [<directory2> ... <directoryN>]
+    ./imagecompressor.sh [-q quality] <directory1> [<directory2> ... <directoryN>]
     ```
 
    - `-q quality`: Optional parameter to specify the compression quality. The default value is 65 if not provided.
    
 Example:
 ```bash
-./compressor.sh -q 75 folder1 folder2 folder3
+./imagecompressor.sh -q 75 folder1 folder2 folder3
 ```
 <img width="694" alt="image" src="https://github.com/user-attachments/assets/4d05813b-c093-4d1b-9da4-d6167c191a54">
 
