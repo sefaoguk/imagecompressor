@@ -58,6 +58,12 @@ if ! command -v bc &> /dev/null; then
   exit 1
 fi
 
+# Check if 'cwebp' is installed
+if ! command -v cwebp &> /dev/null; then
+  echo "Error: 'cwebp' command not found. Please install 'cwebp'."
+  exit 1
+fi
+
 # Process each directory
 for DIRECTORY in "$@"; do
   if [ ! -d "$DIRECTORY" ]; then
@@ -66,12 +72,6 @@ for DIRECTORY in "$@"; do
   fi
 
   echo -e "\nProcessing Directory: $DIRECTORY"
-
-  # Temporary file
-  TEMP_FILE=$(mktemp)
-
-  # Total file count
-  TOTAL_FILES=$(find "$DIRECTORY" -type f \( -name "*.png" -o -name "*.jpeg" -o -name "*.jpg" -o -name "*.webp" \) | wc -l)
 
   # Directory size before processing
   if [ "$(uname)" == "Darwin" ]; then
@@ -86,6 +86,10 @@ for DIRECTORY in "$@"; do
   # Print headers
   printf "%-30s %-15s %-15s %-10s\n" "File Name" "Before Size" "After Size" "Savings"
 
+  # Initialize total savings variables
+  TOTAL_BEFORE_SIZE=0
+  TOTAL_AFTER_SIZE=0
+
   # Process files and print sizes
   find "$DIRECTORY" -type f \( -name "*.png" -o -name "*.jpeg" -o -name "*.jpg" -o -name "*.webp" \) | while read -r FILE; do
     # File size before
@@ -98,25 +102,42 @@ for DIRECTORY in "$@"; do
     fi
     BEFORE_SIZE_FORMATTED=$(format_size "$BEFORE_SIZE_BYTES")
     
-    # Compress file
-    magick "$FILE" -quality $QUALITY "$FILE"
+    # Create output file name with .webp extension
+    OUTPUT_FILE="${FILE%.*}.webp"
+
+    # Compress file and convert to WEBP format
+    cwebp -q $QUALITY "$FILE" -o "$OUTPUT_FILE" > /dev/null 2>&1
     
     # File size after
     if [ "$(uname)" == "Darwin" ]; then
       # macOS
-      AFTER_SIZE_BYTES=$(stat -f%z "$FILE")
+      AFTER_SIZE_BYTES=$(stat -f%z "$OUTPUT_FILE")
     else
       # Linux
-      AFTER_SIZE_BYTES=$(stat -c%s "$FILE")
+      AFTER_SIZE_BYTES=$(stat -c%s "$OUTPUT_FILE")
     fi
     AFTER_SIZE_FORMATTED=$(format_size "$AFTER_SIZE_BYTES")
     
-    # Calculate savings percentage
-    SAVINGS_PERCENT=$(calculate_savings "$BEFORE_SIZE_BYTES" "$AFTER_SIZE_BYTES")
-    
-    # Print results
-    printf "%-30s %-15s %-15s %-10s\n" "$(basename "$FILE")" "$BEFORE_SIZE_FORMATTED" "$AFTER_SIZE_FORMATTED" "$SAVINGS_PERCENT%"
-  done > "$TEMP_FILE"
+    # Only update file if compression reduced size
+    if [ "$AFTER_SIZE_BYTES" -lt "$BEFORE_SIZE_BYTES" ]; then
+      # Calculate savings percentage
+      SAVINGS_PERCENT=$(calculate_savings "$BEFORE_SIZE_BYTES" "$AFTER_SIZE_BYTES")
+      
+      # Print results
+      printf "%-30s %-15s %-15s %-10s\n" "$(basename "$FILE")" "$BEFORE_SIZE_FORMATTED" "$AFTER_SIZE_FORMATTED" "$SAVINGS_PERCENT%"
+      
+      # Add to total savings
+      TOTAL_BEFORE_SIZE=$((TOTAL_BEFORE_SIZE + BEFORE_SIZE_BYTES))
+      TOTAL_AFTER_SIZE=$((TOTAL_AFTER_SIZE + AFTER_SIZE_BYTES))
+      
+      # Replace original file with the compressed file
+      mv "$OUTPUT_FILE" "$FILE"
+    else
+      # If size didn't reduce, print original size and keep original file
+      printf "%-30s %-15s %-15s %-10s\n" "$(basename "$FILE")" "$BEFORE_SIZE_FORMATTED" "$BEFORE_SIZE_FORMATTED" "0.00%"
+      rm "$OUTPUT_FILE"  # Remove the new file if it didn't reduce the size
+    fi
+  done
 
   # Directory size after processing
   if [ "$(uname)" == "Darwin" ]; then
@@ -129,15 +150,15 @@ for DIRECTORY in "$@"; do
   AFTER_SIZE=$(format_size "$AFTER_SIZE_BYTES")
 
   # Print results
-  cat "$TEMP_FILE"
-  rm "$TEMP_FILE"
-
   echo -e "\n**********************************************"
-  echo -e "Total file count: $TOTAL_FILES"
+  echo -e "Total file count: $(find "$DIRECTORY" -type f \( -name "*.png" -o -name "*.jpeg" -o -name "*.jpg" -o -name "*.webp" \) | wc -l)"
   echo -e "Directory size before: $BEFORE_SIZE"
   echo -e "Directory size after: $AFTER_SIZE"
-  echo -e "Total savings: $(calculate_savings "$BEFORE_SIZE_BYTES" "$AFTER_SIZE_BYTES")%"
+
+  # Calculate total savings percentage for the directory
+  #TOTAL_SAVINGS_PERCENT=$(calculate_savings "$TOTAL_BEFORE_SIZE" "$TOTAL_AFTER_SIZE")
+
+  #echo -e "Total savings: $TOTAL_SAVINGS_PERCENT%"
   echo -e "Quality used: $QUALITY"
   echo "**********************************************"
 done
-
