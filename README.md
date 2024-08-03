@@ -38,6 +38,7 @@ To run the script, follow these steps:
 Example:
 ```bash
 ./compressor.sh folder1 folder2 folder3
+```
 
 ## Sample Output
 <img width="694" alt="image" src="https://github.com/user-attachments/assets/4d05813b-c093-4d1b-9da4-d6167c191a54">
@@ -47,4 +48,5 @@ Example:
 
 ## Contributing
 Sefa Öğük - Developer and maintainer of the script
+
 
